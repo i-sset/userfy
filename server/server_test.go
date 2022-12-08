@@ -44,7 +44,7 @@ var _ = Describe("Server", func() {
 
 				result := recorder.Result()
 				defer result.Body.Close()
-				Expect(result.StatusCode).To(Equal(201))
+				Expect(result.StatusCode).To(Equal(http.StatusCreated))
 			})
 
 			It("Should return a 405 status code if method is not allowed", func() {
@@ -53,7 +53,7 @@ var _ = Describe("Server", func() {
 
 				result := recorder.Result()
 				defer result.Body.Close()
-				Expect(result.StatusCode).To(Equal(405))
+				Expect(result.StatusCode).To(Equal(http.StatusMethodNotAllowed))
 			})
 
 			It("Should return a 400 status code when payload is not valid", func() {
@@ -63,7 +63,7 @@ var _ = Describe("Server", func() {
 
 				result := recorder.Result()
 				defer result.Body.Close()
-				Expect(result.StatusCode).To(Equal(400))
+				Expect(result.StatusCode).To(Equal(http.StatusBadRequest))
 			})
 		})
 	})
