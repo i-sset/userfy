@@ -26,12 +26,12 @@ var _ = Describe("Server", func() {
 	})
 
 	Describe("/user endpoint", func() {
-		Context("When inserting a new user", func() {
-			var validUserJson string
-			var userReader *strings.Reader
-			var request *http.Request
-			var recorder *httptest.ResponseRecorder
+		var validUserJson string
+		var userReader *strings.Reader
+		var request *http.Request
+		var recorder *httptest.ResponseRecorder
 
+		Context("When inserting a new valid user", func() {
 			BeforeEach(func() {
 				validUserJson = `{"ID": 12345, "Name": "Josset", "Email": "isset.josset@gmail.com", "Age": 26}`
 				userReader = strings.NewReader(validUserJson)
@@ -46,9 +46,15 @@ var _ = Describe("Server", func() {
 				defer result.Body.Close()
 				Expect(result.StatusCode).To(Equal(http.StatusCreated))
 			})
+		})
+
+		Context("When inserting a no valid user", func() {
+			BeforeEach(func() {
+				recorder = httptest.NewRecorder()
+			})
 
 			It("Should return a 405 status code if method is not allowed", func() {
-				request := httptest.NewRequest(http.MethodGet, "/user", userReader)
+				request := httptest.NewRequest(http.MethodGet, "/user", nil)
 				server.InsertUserHandler(recorder, request)
 
 				result := recorder.Result()
