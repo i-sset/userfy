@@ -46,6 +46,16 @@ var _ = Describe("Server", func() {
 				defer result.Body.Close()
 				Expect(result.StatusCode).To(Equal(http.StatusCreated))
 			})
+
+			It("Should provide a link to the new user created in the Location header", func() {
+				getUserURL := "/users/1"
+				server.InsertUserHandler(recorder, request)
+
+				result := recorder.Result()
+				defer result.Body.Close()
+				location := result.Header.Get("Location")
+				Expect(location).To(Equal(getUserURL))
+			})
 		})
 
 		Context("When inserting a no valid user", func() {
