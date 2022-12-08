@@ -6,8 +6,12 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"cl.isset.userfy/repository"
+
 	"cl.isset.userfy/model"
 )
+
+var userRepository = repository.UserRepository{}
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
@@ -26,14 +30,15 @@ func InsertUserHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	var id uint = 1
+
 	newUser := model.User{}
 	json.Unmarshal(body, &newUser)
-	newUser.ID = id
-	getUserURL := fmt.Sprintf("/users/%d", id)
-	w.Header().Set("Location", getUserURL)
+	createdUser := userRepository.InsertUser(newUser)
+
+	createdUserURL := fmt.Sprintf("/users/%d", createdUser.ID)
+	w.Header().Set("Location", createdUserURL)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 
-	json.NewEncoder(w).Encode(newUser)
+	json.NewEncoder(w).Encode(createdUser)
 }

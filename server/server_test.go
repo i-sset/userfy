@@ -1,10 +1,13 @@
 package server_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 
+	"cl.isset.userfy/model"
 	"cl.isset.userfy/server"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -33,7 +36,7 @@ var _ = Describe("Server", func() {
 
 		Context("When inserting a new valid user", func() {
 			BeforeEach(func() {
-				validUserJson = `{"ID": 12345, "Name": "Josset", "Email": "isset.josset@gmail.com", "Age": 26}`
+				validUserJson = `{"Name": "Josset", "Email": "isset.josset@gmail.com", "Age": 26}`
 				userReader = strings.NewReader(validUserJson)
 				request = httptest.NewRequest(http.MethodPost, "/user", userReader)
 				recorder = httptest.NewRecorder()
@@ -48,13 +51,16 @@ var _ = Describe("Server", func() {
 			})
 
 			It("Should provide a link to the new user created in the Location header", func() {
-				getUserURL := "/users/1"
 				server.InsertUserHandler(recorder, request)
 
 				result := recorder.Result()
 				defer result.Body.Close()
+				createdUser := model.User{}
+				json.NewDecoder(result.Body).Decode(&createdUser)
+
+				createdUserURL := fmt.Sprintf("/users/%d", createdUser.ID)
 				location := result.Header.Get("Location")
-				Expect(location).To(Equal(getUserURL))
+				Expect(location).To(Equal(createdUserURL))
 			})
 		})
 
