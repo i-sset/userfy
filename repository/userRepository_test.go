@@ -60,22 +60,33 @@ var _ = Describe("UserRepository", func() {
 	Describe("When clear method is called", func() {
 		var userRepository repository.UserRepository
 		var validUser model.User
+		var users []model.User
 
 		BeforeEach(func() {
 			validUser = model.User{Name: "Josset", Email: "isset.josset@gmail.com", Age: 26}
 			userRepository.Clear()
+			userRepository.InsertUser(validUser)
+			userRepository.InsertUser(validUser)
+			users = userRepository.GetUsers()
 		})
 
 		It("Should delete all users", func() {
-			userRepository.InsertUser(validUser)
-			userRepository.InsertUser(validUser)
-			users := userRepository.GetUsers()
-
 			Expect(len(users)).To(Equal(2))
 
 			userRepository.Clear()
 			users = userRepository.GetUsers()
 			Expect(len(users)).To(Equal(0))
+		})
+
+		It("Should reset the idCounter used for IDs", func() {
+			Expect(users[0].ID).To(Equal(uint(1)))
+			Expect(users[1].ID).To(Equal(uint(2)))
+			userRepository.Clear()
+
+			userRepository.InsertUser(validUser)
+			users = userRepository.GetUsers()
+			Expect(users[0].ID).To(Equal(uint(1)))
+
 		})
 	})
 })

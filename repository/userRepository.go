@@ -27,4 +27,5 @@ func (userRepo UserRepository) GetUsers() []model.User {
 
 func (userRepo UserRepository) Clear() {
 	users = []model.User{}
+	idCounter = 0
 }
