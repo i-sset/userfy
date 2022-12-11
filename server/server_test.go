@@ -89,4 +89,41 @@ var _ = Describe("Server", func() {
 			})
 		})
 	})
+
+	Describe("/users endpoint: get users", func() {
+		var request *http.Request
+		var recorder *httptest.ResponseRecorder
+
+		BeforeEach(func() {
+			request = httptest.NewRequest(http.MethodGet, "/users", nil)
+			recorder = httptest.NewRecorder()
+		})
+
+		It("Should return a 200 status code", func() {
+			server.GetUsersHandler(recorder, request)
+
+			result := recorder.Result()
+			Expect(result.StatusCode).To(Equal(http.StatusOK))
+		})
+
+		It("Should return a not empty array", func() {
+			server.GetUsersHandler(recorder, request)
+
+			result := recorder.Result()
+			var users []model.User
+			json.NewDecoder(result.Body).Decode(&users)
+			Expect(users).ShouldNot(BeEmpty())
+		})
+
+		Context("When Method GET is not used for this endpoint", func() {
+			It("Should return a method not allowed status", func() {
+				request = httptest.NewRequest(http.MethodPut, "/users", nil)
+				recorder = httptest.NewRecorder()
+				server.GetUsersHandler(recorder, request)
+
+				result := recorder.Result()
+				Expect(result.StatusCode).To(Equal(http.StatusMethodNotAllowed))
+			})
+		})
+	})
 })
