@@ -8,11 +8,12 @@ import (
 	"cl.isset.userfy/repository"
 )
 
+var userRepository repository.UserRepository
+
 var _ = Describe("UserRepository", func() {
 	Describe("When inserting a valid user", func() {
 		var validUser model.User
 		var expectedUser model.User
-		var userRepository repository.UserRepository
 
 		BeforeEach(func() {
 			validUser = model.User{Name: "Josset", Email: "isset.josset@gmail.com", Age: 26}
@@ -40,7 +41,6 @@ var _ = Describe("UserRepository", func() {
 	})
 
 	Describe("When fetching all users", func() {
-		var userRepository repository.UserRepository
 		var validUser model.User
 
 		BeforeEach(func() {
@@ -58,7 +58,6 @@ var _ = Describe("UserRepository", func() {
 	})
 
 	Describe("When clear method is called", func() {
-		var userRepository repository.UserRepository
 		var validUser model.User
 		var users []model.User
 
@@ -87,6 +86,47 @@ var _ = Describe("UserRepository", func() {
 			users = userRepository.GetUsers()
 			Expect(users[0].ID).To(Equal(uint(1)))
 
+		})
+	})
+
+	Describe("When updating an existing user", func() {
+		Context("When payload is valid", func() {
+			var validUser model.User
+			var expectedUser model.User
+			BeforeEach(func() {
+				validUser = model.User{ID: 1, Name: "Josset", Email: "isset.josset@gmail.com", Age: 26}
+				expectedUser = model.User{ID: 1, Name: "Joseto", Email: "josset.isset@hotmail.com", Age: 30}
+				userRepository.Clear()
+			})
+
+			It("Should return the updated entity", func() {
+				userRepository.InsertUser(validUser)
+				validUser.Name = "Joseto"
+				validUser.Email = "josset.isset@hotmail.com"
+				validUser.Age = 30
+
+				updatedUser, _ := userRepository.UpdateUser(validUser)
+
+				Expect(updatedUser.ID).To(Equal(expectedUser.ID))
+				Expect(updatedUser.Name).To(Equal(expectedUser.Name))
+				Expect(updatedUser.Email).To(Equal(expectedUser.Email))
+				Expect(updatedUser.Age).To(Equal(expectedUser.Age))
+			})
+		})
+
+		Context("When payload is not a valid entity", func() {
+			var nonExistentUser model.User
+			BeforeEach(func() {
+				nonExistentUser = model.User{ID: 5, Name: "Josset", Email: "isset.josset@gmail.com", Age: 26}
+				userRepository.Clear()
+			})
+
+			It("Should return an error", func() {
+				user, err := userRepository.UpdateUser(nonExistentUser)
+
+				Expect(err).ShouldNot(BeNil())
+				Expect(user).Should(BeNil())
+			})
 		})
 	})
 })

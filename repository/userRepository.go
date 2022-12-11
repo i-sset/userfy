@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"errors"
+
 	"cl.isset.userfy/model"
 )
 
@@ -23,6 +25,25 @@ func nextID() uint {
 
 func (userRepo UserRepository) GetUsers() []model.User {
 	return users
+}
+
+func (userRepo UserRepository) UpdateUser(user model.User) (*model.User, error) {
+	var userToBeUpdated *model.User
+	for _, u := range users {
+		if u.ID == user.ID {
+			userToBeUpdated = &u
+			break
+		}
+	}
+
+	if userToBeUpdated == nil {
+		return nil, errors.New("user provided does not exist")
+	}
+	userToBeUpdated.Name = user.Name
+	userToBeUpdated.Email = user.Email
+	userToBeUpdated.Age = user.Age
+
+	return userToBeUpdated, nil
 }
 
 func (userRepo UserRepository) Clear() {
