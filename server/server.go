@@ -18,6 +18,7 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func InsertUserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -44,6 +45,8 @@ func InsertUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -56,6 +59,7 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
