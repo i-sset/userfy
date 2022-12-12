@@ -54,3 +54,24 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	users := userRepository.GetUsers()
 	json.NewEncoder(w).Encode(users)
 }
+
+func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	if !json.Valid(body) {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	incomingUser := model.User{}
+	json.Unmarshal(body, &incomingUser)
+	updatedUser, err := userRepository.UpdateUser(incomingUser)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedUser)
+}
