@@ -10,7 +10,9 @@ import (
 func main() {
 	http.HandleFunc("/", server.RootHandler)
 	http.HandleFunc("/user", server.InsertUserHandler)
+	http.HandleFunc("/user/update", server.UpdateUserHandler)
 	http.HandleFunc("/users", server.GetUsersHandler)
+
 	fmt.Println("Listening at port 8080")
 	http.ListenAndServe(":8080", nil)
 }
