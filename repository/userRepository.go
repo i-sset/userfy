@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"database/sql"
 	"errors"
+	"fmt"
 
 	"cl.isset.userfy/model"
 )
@@ -15,7 +17,13 @@ type IUserRepository interface {
 	UpdateUser(model.User) (*model.User, error)
 }
 
-type UserRepository struct{}
+type SQLDB interface {
+	Query(query string, args ...any) (*sql.Rows, error)
+}
+
+type UserRepository struct {
+	DB SQLDB
+}
 
 func (userRepo UserRepository) InsertUser(user model.User) model.User {
 	id := nextID()
@@ -30,6 +38,19 @@ func nextID() uint {
 }
 
 func (userRepo UserRepository) GetUsers() []model.User {
+
+	users := []model.User{}
+	usersRow, err := userRepo.DB.Query("SELECT * FROM users")
+	if err != nil {
+		fmt.Printf("Error while fetching users: %v\n", err)
+		return nil
+	}
+
+	for usersRow.Next() {
+		user := model.User{}
+		usersRow.Scan(&user.ID, &user.Name, &user.Email, &user.Age)
+		users = append(users, user)
+	}
 	return users
 }
 
