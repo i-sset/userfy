@@ -65,6 +65,13 @@ var _ = Describe("UserRepository", func() {
 			timesCalled := fakeDB.TimesCalled
 			Expect(timesCalled).To(Equal(1))
 		})
+
+		It("Should call db.Query method with 'SELECT * FROM users' query", func() {
+			userRepository.GetUsers()
+			queryCalledWith := fakeDB.CalledWith()
+
+			Expect(queryCalledWith).To(Equal("SELECT * FROM users"))
+		})
 	})
 
 	Describe("When updating an existing user", func() {
