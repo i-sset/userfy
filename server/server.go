@@ -13,11 +13,9 @@ import (
 
 var userRepository = repository.UserRepository{}
 
-func RootHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-}
+type UserServer struct{}
 
-func InsertUserHandler(w http.ResponseWriter, r *http.Request) {
+func (u UserServer) InsertUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -44,7 +42,7 @@ func InsertUserHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(createdUser)
 }
 
-func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
+func (u UserServer) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	if r.Method != http.MethodGet {
@@ -58,7 +56,7 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
-func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (u UserServer) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	body, _ := ioutil.ReadAll(r.Body)
@@ -78,4 +76,8 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updatedUser)
+}
+
+func RootHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }

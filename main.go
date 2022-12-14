@@ -11,10 +11,14 @@ import (
 )
 
 func main() {
+
+	userServer := server.UserServer{}
+
 	http.HandleFunc("/", server.RootHandler)
-	http.HandleFunc("/user", server.InsertUserHandler)
-	http.HandleFunc("/user/update", server.UpdateUserHandler)
-	http.HandleFunc("/users", server.GetUsersHandler)
+
+	http.HandleFunc("/user", userServer.InsertUserHandler)
+	http.HandleFunc("/user/update", userServer.UpdateUserHandler)
+	http.HandleFunc("/users", userServer.GetUsersHandler)
 
 	loadDatabase()
 	fmt.Println("Listening at port 8080")

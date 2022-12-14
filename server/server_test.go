@@ -15,6 +15,7 @@ import (
 )
 
 var userRepository repository.UserRepository
+var userServer = server.UserServer{}
 
 var _ = Describe("Server", func() {
 	Describe("root endpoint", func() {
@@ -46,7 +47,7 @@ var _ = Describe("Server", func() {
 			})
 
 			It("Should return a 201 status code if payload is valid", func() {
-				server.InsertUserHandler(recorder, request)
+				userServer.InsertUserHandler(recorder, request)
 
 				result := recorder.Result()
 				defer result.Body.Close()
@@ -54,7 +55,7 @@ var _ = Describe("Server", func() {
 			})
 
 			It("Should provide a link to the new user created in the Location header", func() {
-				server.InsertUserHandler(recorder, request)
+				userServer.InsertUserHandler(recorder, request)
 
 				result := recorder.Result()
 				defer result.Body.Close()
@@ -74,7 +75,7 @@ var _ = Describe("Server", func() {
 
 			It("Should return a 405 status code if method is not allowed", func() {
 				request := httptest.NewRequest(http.MethodGet, "/user", nil)
-				server.InsertUserHandler(recorder, request)
+				userServer.InsertUserHandler(recorder, request)
 
 				result := recorder.Result()
 				defer result.Body.Close()
@@ -84,7 +85,7 @@ var _ = Describe("Server", func() {
 			It("Should return a 400 status code when payload is not valid", func() {
 				userReader := strings.NewReader(`"{ID": 1234, {}`)
 				request := httptest.NewRequest(http.MethodPost, "/user", userReader)
-				server.InsertUserHandler(recorder, request)
+				userServer.InsertUserHandler(recorder, request)
 
 				result := recorder.Result()
 				defer result.Body.Close()
@@ -111,14 +112,14 @@ var _ = Describe("Server", func() {
 			})
 
 			It("Should return 200 status code", func() {
-				server.UpdateUserHandler(recorder, request)
+				userServer.UpdateUserHandler(recorder, request)
 
 				result := recorder.Result()
 				Expect(result.StatusCode).To(Equal(http.StatusOK))
 			})
 
 			It("Should return an user entity ", func() {
-				server.UpdateUserHandler(recorder, request)
+				userServer.UpdateUserHandler(recorder, request)
 
 				result := recorder.Result()
 				defer result.Body.Close()
@@ -140,7 +141,7 @@ var _ = Describe("Server", func() {
 			It("Should return a bad request response for a not valid json", func() {
 				userReader = strings.NewReader(notValidUser)
 				request = httptest.NewRequest(http.MethodPut, endpoint, userReader)
-				server.UpdateUserHandler(recorder, request)
+				userServer.UpdateUserHandler(recorder, request)
 
 				result := recorder.Result()
 
@@ -150,7 +151,7 @@ var _ = Describe("Server", func() {
 			It("Should return a not found response for a not existent user", func() {
 				userReader = strings.NewReader(validButNotExistentUser)
 				request = httptest.NewRequest(http.MethodPut, endpoint, userReader)
-				server.UpdateUserHandler(recorder, request)
+				userServer.UpdateUserHandler(recorder, request)
 
 				result := recorder.Result()
 
@@ -169,14 +170,14 @@ var _ = Describe("Server", func() {
 		})
 
 		It("Should return a 200 status code", func() {
-			server.GetUsersHandler(recorder, request)
+			userServer.GetUsersHandler(recorder, request)
 
 			result := recorder.Result()
 			Expect(result.StatusCode).To(Equal(http.StatusOK))
 		})
 
 		It("Should return a not empty array", func() {
-			server.GetUsersHandler(recorder, request)
+			userServer.GetUsersHandler(recorder, request)
 
 			result := recorder.Result()
 			var users []model.User
@@ -188,7 +189,7 @@ var _ = Describe("Server", func() {
 			It("Should return a method not allowed status", func() {
 				request = httptest.NewRequest(http.MethodPut, "/users", nil)
 				recorder = httptest.NewRecorder()
-				server.GetUsersHandler(recorder, request)
+				userServer.GetUsersHandler(recorder, request)
 
 				result := recorder.Result()
 				Expect(result.StatusCode).To(Equal(http.StatusMethodNotAllowed))
