@@ -11,8 +11,8 @@ import (
 )
 
 func main() {
-
-	userServer := server.UserServer{}
+	userRepository := repository.UserRepository{}
+	userServer := server.UserServer{userRepository}
 
 	http.HandleFunc("/", server.RootHandler)
 

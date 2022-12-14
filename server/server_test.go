@@ -2,20 +2,40 @@ package server_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 
 	"cl.isset.userfy/model"
-	"cl.isset.userfy/repository"
 	"cl.isset.userfy/server"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var userRepository repository.UserRepository
-var userServer = server.UserServer{}
+type fakeUserRepository struct{}
+
+func (userRepo fakeUserRepository) InsertUser(user model.User) model.User {
+	return user
+}
+
+func (userRepo fakeUserRepository) GetUsers() []model.User {
+	return []model.User{
+		model.User{},
+	}
+}
+
+func (userRepo fakeUserRepository) UpdateUser(user model.User) (*model.User, error) {
+	notExistentID := uint(14)
+
+	if user.ID == notExistentID {
+		return nil, errors.New("user provided does not exist")
+	}
+	return &user, nil
+}
+
+var userServer = server.UserServer{fakeUserRepository{}}
 
 var _ = Describe("Server", func() {
 	Describe("root endpoint", func() {
@@ -103,12 +123,10 @@ var _ = Describe("Server", func() {
 			var validUserJson string
 
 			BeforeEach(func() {
-				userRepository.Clear()
 				validUserJson = `{"ID": 1,"Name": "Joseto", "Email": "josset.isset@hotmail.com", "Age": 30}`
 				userReader = strings.NewReader(validUserJson)
 				request = httptest.NewRequest(http.MethodPut, endpoint, userReader)
 				recorder = httptest.NewRecorder()
-				userRepository.InsertUser(model.User{ID: 1, Name: "Josset", Email: "isset.josset@gmail.com", Age: 26})
 			})
 
 			It("Should return 200 status code", func() {

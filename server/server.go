@@ -11,9 +11,9 @@ import (
 	"cl.isset.userfy/model"
 )
 
-var userRepository = repository.UserRepository{}
-
-type UserServer struct{}
+type UserServer struct {
+	Repository repository.IUserRepository
+}
 
 func (u UserServer) InsertUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -32,7 +32,7 @@ func (u UserServer) InsertUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	newUser := model.User{}
 	json.Unmarshal(body, &newUser)
-	createdUser := userRepository.InsertUser(newUser)
+	createdUser := u.Repository.InsertUser(newUser)
 
 	createdUserURL := fmt.Sprintf("/users/%d", createdUser.ID)
 	w.Header().Set("Location", createdUserURL)
@@ -52,7 +52,7 @@ func (u UserServer) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	users := userRepository.GetUsers()
+	users := u.Repository.GetUsers()
 	json.NewEncoder(w).Encode(users)
 }
 
@@ -68,7 +68,7 @@ func (u UserServer) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	incomingUser := model.User{}
 	json.Unmarshal(body, &incomingUser)
-	updatedUser, err := userRepository.UpdateUser(incomingUser)
+	updatedUser, err := u.Repository.UpdateUser(incomingUser)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return

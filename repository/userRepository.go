@@ -9,6 +9,12 @@ import (
 var idCounter uint = 0
 var users []model.User
 
+type IUserRepository interface {
+	InsertUser(model.User) model.User
+	GetUsers() []model.User
+	UpdateUser(model.User) (*model.User, error)
+}
+
 type UserRepository struct{}
 
 func (userRepo UserRepository) InsertUser(user model.User) model.User {
