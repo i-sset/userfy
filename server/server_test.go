@@ -48,6 +48,12 @@ func (userRepo *fakeUserRepository) DeleteUser(id int) bool {
 
 var fakeRepo fakeUserRepository
 var userServer server.UserServer
+var request *http.Request
+var recorder *httptest.ResponseRecorder
+
+var validUser = `{"ID": 1,"Name": "Joseto", "Email": "josset.isset@hotmail.com", "Age": 26}`
+var notValidUser = `{"ID": 1,"Nae": "Joseto", "Email: "josset.isset@hotmail.com", "Age" 26}`
+var validButNotExistentUser = `{"ID": 14,"Name": "Josetqqweip", "Email": "josset.isset@hotmail.com", "Age": 25}`
 
 var _ = Describe("Server", func() {
 	Describe("root endpoint", func() {
@@ -65,15 +71,11 @@ var _ = Describe("Server", func() {
 	})
 
 	Describe("/user endpoint", func() {
-		var validUserJson string
 		var userReader *strings.Reader
-		var request *http.Request
-		var recorder *httptest.ResponseRecorder
 
 		Context("When inserting a new valid user", func() {
 			BeforeEach(func() {
-				validUserJson = `{"Name": "Josset", "Email": "isset.josset@gmail.com", "Age": 26}`
-				userReader = strings.NewReader(validUserJson)
+				userReader = strings.NewReader(validUser)
 				request = httptest.NewRequest(http.MethodPost, "/user", userReader)
 				recorder = httptest.NewRecorder()
 				fakeRepo = fakeUserRepository{}
@@ -131,14 +133,9 @@ var _ = Describe("Server", func() {
 	Describe("/user/update endpoint: update users", func() {
 		var endpoint = "/user/update"
 		var userReader *strings.Reader
-		var request *http.Request
-		var recorder *httptest.ResponseRecorder
 		Context("When it is a valid request", func() {
-			var validUserJson string
-
 			BeforeEach(func() {
-				validUserJson = `{"ID": 1,"Name": "Joseto", "Email": "josset.isset@hotmail.com", "Age": 30}`
-				userReader = strings.NewReader(validUserJson)
+				userReader = strings.NewReader(validUser)
 				request = httptest.NewRequest(http.MethodPut, endpoint, userReader)
 				recorder = httptest.NewRecorder()
 				fakeRepo = fakeUserRepository{}
@@ -164,11 +161,7 @@ var _ = Describe("Server", func() {
 		})
 
 		Context("When it is not a valid request", func() {
-			var notValidUser string
-			var validButNotExistentUser string
 			BeforeEach(func() {
-				notValidUser = `{"ID": 1,"Nae": "Joseto", "Email: "josset.isset@hotmail.com", "Age" 30}`
-				validButNotExistentUser = `{"ID": 14,"Name": "Josetqqweip", "Email": "josset.isset@hotmail.com", "Age": 25}`
 				recorder = httptest.NewRecorder()
 				fakeRepo = fakeUserRepository{}
 				userServer = server.UserServer{&fakeRepo}
@@ -197,9 +190,6 @@ var _ = Describe("Server", func() {
 	})
 
 	Describe("/users endpoint: get users", func() {
-		var request *http.Request
-		var recorder *httptest.ResponseRecorder
-
 		BeforeEach(func() {
 			request = httptest.NewRequest(http.MethodGet, "/users", nil)
 			recorder = httptest.NewRecorder()
@@ -237,8 +227,6 @@ var _ = Describe("Server", func() {
 
 	Describe("/users/delete endpoint: delete user", func() {
 		Context("When the user exists", func() {
-			var request *http.Request
-			var recorder *httptest.ResponseRecorder
 			BeforeEach(func() {
 				request = httptest.NewRequest(http.MethodDelete, "/user/delete/1", nil)
 				recorder = httptest.NewRecorder()
@@ -268,8 +256,6 @@ var _ = Describe("Server", func() {
 		})
 
 		Context("When the user  does not exists", func() {
-			var request *http.Request
-			var recorder *httptest.ResponseRecorder
 			BeforeEach(func() {
 				request = httptest.NewRequest(http.MethodDelete, "/user/delete/14", nil)
 				recorder = httptest.NewRecorder()
@@ -286,15 +272,13 @@ var _ = Describe("Server", func() {
 		})
 
 		Context("When the id provided is not valid", func() {
-			var request *http.Request
-			var recorder *httptest.ResponseRecorder
-
 			BeforeEach(func() {
 				request = httptest.NewRequest(http.MethodDelete, "/user/delete/notValidID", nil)
 				recorder = httptest.NewRecorder()
 				fakeRepo = fakeUserRepository{}
 				userServer = server.UserServer{&fakeRepo}
 			})
+
 			It("Should return a bad request response", func() {
 				userServer.DeleteUserHandler(recorder, request)
 
@@ -304,15 +288,13 @@ var _ = Describe("Server", func() {
 		})
 
 		Context("When the handler is invoked", func() {
-			var request *http.Request
-			var recorder *httptest.ResponseRecorder
-
 			BeforeEach(func() {
 				request = httptest.NewRequest(http.MethodGet, "/user/delete/notValidID", nil)
 				recorder = httptest.NewRecorder()
 				fakeRepo = fakeUserRepository{}
 				userServer = server.UserServer{&fakeRepo}
 			})
+
 			It("Should return not allowed response if http method is different of DELETE", func() {
 				userServer.DeleteUserHandler(recorder, request)
 
@@ -321,5 +303,4 @@ var _ = Describe("Server", func() {
 			})
 		})
 	})
-
 })
