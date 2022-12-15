@@ -56,3 +56,19 @@ func (userRepo UserRepository) UpdateUser(user model.User) (*model.User, error) 
 
 	return &user, nil
 }
+
+func (userRepo UserRepository) DeleteUser(user model.User) bool {
+	result, err := userRepo.DB.Exec("DELETE FROM users WHERE ID = ?", user.ID)
+	if err != nil {
+		fmt.Printf("Error while deleting a user: %v\n", err)
+		return false
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err == nil {
+		fmt.Printf("Delete statement Rows affected: %d", rowsAffected)
+		return true
+	}
+
+	return false
+}
