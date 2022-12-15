@@ -7,9 +7,6 @@ import (
 	"cl.isset.userfy/model"
 )
 
-var idCounter uint = 0
-var users []model.User
-
 type IUserRepository interface {
 	InsertUser(model.User) model.User
 	GetUsers() []model.User
@@ -37,11 +34,6 @@ func (userRepo UserRepository) InsertUser(user model.User) model.User {
 	return user
 }
 
-func nextID() uint {
-	idCounter = idCounter + uint(1)
-	return idCounter
-}
-
 func (userRepo UserRepository) GetUsers() []model.User {
 
 	users := []model.User{}
@@ -63,9 +55,4 @@ func (userRepo UserRepository) UpdateUser(user model.User) (*model.User, error) 
 	userRepo.DB.Exec("UPDATE users SET name = ?, email = ?, age = ?  WHERE ID = ?", user.Name, user.Email, user.Age, user.ID)
 
 	return &user, nil
-}
-
-func (userRepo UserRepository) Clear() {
-	users = []model.User{}
-	idCounter = 0
 }
