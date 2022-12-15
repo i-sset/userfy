@@ -19,6 +19,7 @@ func main() {
 	http.HandleFunc("/user", userServer.InsertUserHandler)
 	http.HandleFunc("/user/update", userServer.UpdateUserHandler)
 	http.HandleFunc("/users", userServer.GetUsersHandler)
+	http.HandleFunc("/user/delete/", userServer.DeleteUserHandler)
 
 	fmt.Println("Listening at port 8080")
 	http.ListenAndServe(":8080", nil)
