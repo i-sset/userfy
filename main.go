@@ -5,9 +5,7 @@ import (
 	"net/http"
 
 	"cl.isset.userfy/database"
-
 	"cl.isset.userfy/repository"
-
 	"cl.isset.userfy/server"
 )
 
@@ -22,7 +20,6 @@ func main() {
 	http.HandleFunc("/user/update", userServer.UpdateUserHandler)
 	http.HandleFunc("/users", userServer.GetUsersHandler)
 
-	//loadDatabase()
 	fmt.Println("Listening at port 8080")
 	http.ListenAndServe(":8080", nil)
 }
