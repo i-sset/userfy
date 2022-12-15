@@ -11,6 +11,7 @@ type IUserRepository interface {
 	InsertUser(model.User) model.User
 	GetUsers() []model.User
 	UpdateUser(model.User) (*model.User, error)
+	DeleteUser(id int) bool
 }
 
 type SQLDB interface {
@@ -57,8 +58,8 @@ func (userRepo UserRepository) UpdateUser(user model.User) (*model.User, error) 
 	return &user, nil
 }
 
-func (userRepo UserRepository) DeleteUser(user model.User) bool {
-	result, err := userRepo.DB.Exec("DELETE FROM users WHERE ID = ?", user.ID)
+func (userRepo UserRepository) DeleteUser(id int) bool {
+	result, err := userRepo.DB.Exec("DELETE FROM users WHERE ID = ?", id)
 	if err != nil {
 		fmt.Printf("Error while deleting a user: %v\n", err)
 		return false

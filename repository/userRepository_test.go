@@ -129,23 +129,21 @@ var _ = Describe("UserRepository", func() {
 
 	Describe("When deleting an user", func() {
 		Context("When the user exists", func() {
-			var validUser model.User
-
+			existentId := 1
 			BeforeEach(func() {
-				validUser = model.User{ID: 1, Name: "Josset", Email: "isset.josset@gmail.com", Age: 26}
 				fakeDB = fakeSQLDB{}
 				userRepository = repository.UserRepository{&fakeDB}
 			})
 
 			It("Should call db.Exec method with correct delete query", func() {
 				expectedQuery := "DELETE FROM users WHERE ID = 1"
-				userRepository.DeleteUser(validUser)
+				userRepository.DeleteUser(existentId)
 
 				assertQuery(expectedQuery, fakeDB.CalledWith())
 			})
 
 			It("Should call db.Exec method with delete statement once", func() {
-				userRepository.DeleteUser(validUser)
+				userRepository.DeleteUser(existentId)
 				expectedTimes := 1
 
 				assertTimesCalled(expectedTimes, fakeDB.TimesCalled)
