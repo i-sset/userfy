@@ -30,7 +30,7 @@ func (userRepo *fakeUserRepository) GetUsers() []model.User {
 }
 
 func (userRepo *fakeUserRepository) UpdateUser(user model.User) (*model.User, error) {
-	notExistentID := uint(14)
+	notExistentID := 14
 
 	if user.ID == notExistentID {
 		return nil, errors.New("user provided does not exist")
@@ -159,7 +159,7 @@ var _ = Describe("Server", func() {
 				defer result.Body.Close()
 				user := model.User{}
 				json.NewDecoder(result.Body).Decode(&user)
-				Expect(user).ToNot(HaveField("ID", uint(0)))
+				Expect(user).ToNot(HaveField("ID", 0))
 			})
 		})
 

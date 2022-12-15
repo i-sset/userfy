@@ -31,7 +31,7 @@ func (userRepo UserRepository) InsertUser(user model.User) model.User {
 		return model.User{}
 	}
 	lastInsertedId, _ := result.LastInsertId()
-	user.ID = uint(lastInsertedId)
+	user.ID = int(lastInsertedId)
 	return user
 }
 
