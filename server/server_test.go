@@ -14,19 +14,22 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-type fakeUserRepository struct{}
+type fakeUserRepository struct {
+	timesCalled int
+	idParameter int
+}
 
-func (userRepo fakeUserRepository) InsertUser(user model.User) model.User {
+func (userRepo *fakeUserRepository) InsertUser(user model.User) model.User {
 	return user
 }
 
-func (userRepo fakeUserRepository) GetUsers() []model.User {
+func (userRepo *fakeUserRepository) GetUsers() []model.User {
 	return []model.User{
 		model.User{},
 	}
 }
 
-func (userRepo fakeUserRepository) UpdateUser(user model.User) (*model.User, error) {
+func (userRepo *fakeUserRepository) UpdateUser(user model.User) (*model.User, error) {
 	notExistentID := uint(14)
 
 	if user.ID == notExistentID {
@@ -35,7 +38,16 @@ func (userRepo fakeUserRepository) UpdateUser(user model.User) (*model.User, err
 	return &user, nil
 }
 
-var userServer = server.UserServer{fakeUserRepository{}}
+func (userRepo *fakeUserRepository) DeleteUser(id int) bool {
+	notExistentID := 14
+	userRepo.timesCalled++
+	userRepo.idParameter = id
+
+	return id != notExistentID
+}
+
+var fakeRepo fakeUserRepository
+var userServer server.UserServer
 
 var _ = Describe("Server", func() {
 	Describe("root endpoint", func() {
@@ -64,6 +76,8 @@ var _ = Describe("Server", func() {
 				userReader = strings.NewReader(validUserJson)
 				request = httptest.NewRequest(http.MethodPost, "/user", userReader)
 				recorder = httptest.NewRecorder()
+				fakeRepo = fakeUserRepository{}
+				userServer = server.UserServer{&fakeRepo}
 			})
 
 			It("Should return a 201 status code if payload is valid", func() {
@@ -127,6 +141,8 @@ var _ = Describe("Server", func() {
 				userReader = strings.NewReader(validUserJson)
 				request = httptest.NewRequest(http.MethodPut, endpoint, userReader)
 				recorder = httptest.NewRecorder()
+				fakeRepo = fakeUserRepository{}
+				userServer = server.UserServer{&fakeRepo}
 			})
 
 			It("Should return 200 status code", func() {
@@ -154,6 +170,8 @@ var _ = Describe("Server", func() {
 				notValidUser = `{"ID": 1,"Nae": "Joseto", "Email: "josset.isset@hotmail.com", "Age" 30}`
 				validButNotExistentUser = `{"ID": 14,"Name": "Josetqqweip", "Email": "josset.isset@hotmail.com", "Age": 25}`
 				recorder = httptest.NewRecorder()
+				fakeRepo = fakeUserRepository{}
+				userServer = server.UserServer{&fakeRepo}
 			})
 
 			It("Should return a bad request response for a not valid json", func() {
@@ -185,6 +203,8 @@ var _ = Describe("Server", func() {
 		BeforeEach(func() {
 			request = httptest.NewRequest(http.MethodGet, "/users", nil)
 			recorder = httptest.NewRecorder()
+			fakeRepo = fakeUserRepository{}
+			userServer = server.UserServer{&fakeRepo}
 		})
 
 		It("Should return a 200 status code", func() {
@@ -214,4 +234,92 @@ var _ = Describe("Server", func() {
 			})
 		})
 	})
+
+	Describe("/users/delete endpoint: delete user", func() {
+		Context("When the user exists", func() {
+			var request *http.Request
+			var recorder *httptest.ResponseRecorder
+			BeforeEach(func() {
+				request = httptest.NewRequest(http.MethodDelete, "/user/delete/1", nil)
+				recorder = httptest.NewRecorder()
+				fakeRepo = fakeUserRepository{}
+				userServer = server.UserServer{&fakeRepo}
+			})
+
+			It("Should return a 204 status code", func() {
+				userServer.DeleteUserHandler(recorder, request)
+
+				result := recorder.Result()
+				Expect(result.StatusCode).To(Equal(http.StatusNoContent))
+			})
+
+			It("Should call repository.DeleteUser method once", func() {
+				userServer.DeleteUserHandler(recorder, request)
+
+				Expect(fakeRepo.timesCalled).To(Equal(1))
+			})
+
+			It("Should call repository.DeleteUser with correct parameter", func() {
+				existentId := 1
+				userServer.DeleteUserHandler(recorder, request)
+
+				Expect(fakeRepo.idParameter).To(Equal(existentId))
+			})
+		})
+
+		Context("When the user  does not exists", func() {
+			var request *http.Request
+			var recorder *httptest.ResponseRecorder
+			BeforeEach(func() {
+				request = httptest.NewRequest(http.MethodDelete, "/user/delete/14", nil)
+				recorder = httptest.NewRecorder()
+				fakeRepo = fakeUserRepository{}
+				userServer = server.UserServer{&fakeRepo}
+			})
+
+			It("Should return a not found status", func() {
+				userServer.DeleteUserHandler(recorder, request)
+
+				result := recorder.Result()
+				Expect(result.StatusCode).To(Equal(http.StatusNotFound))
+			})
+		})
+
+		Context("When the id provided is not valid", func() {
+			var request *http.Request
+			var recorder *httptest.ResponseRecorder
+
+			BeforeEach(func() {
+				request = httptest.NewRequest(http.MethodDelete, "/user/delete/notValidID", nil)
+				recorder = httptest.NewRecorder()
+				fakeRepo = fakeUserRepository{}
+				userServer = server.UserServer{&fakeRepo}
+			})
+			It("Should return a bad request response", func() {
+				userServer.DeleteUserHandler(recorder, request)
+
+				result := recorder.Result()
+				Expect(result.StatusCode).To(Equal(http.StatusBadRequest))
+			})
+		})
+
+		Context("When the handler is invoked", func() {
+			var request *http.Request
+			var recorder *httptest.ResponseRecorder
+
+			BeforeEach(func() {
+				request = httptest.NewRequest(http.MethodGet, "/user/delete/notValidID", nil)
+				recorder = httptest.NewRecorder()
+				fakeRepo = fakeUserRepository{}
+				userServer = server.UserServer{&fakeRepo}
+			})
+			It("Should return not allowed response if http method is different of DELETE", func() {
+				userServer.DeleteUserHandler(recorder, request)
+
+				result := recorder.Result()
+				Expect(result.StatusCode).To(Equal(http.StatusMethodNotAllowed))
+			})
+		})
+	})
+
 })

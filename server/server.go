@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"cl.isset.userfy/repository"
 
@@ -78,6 +80,27 @@ func (u UserServer) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedUser)
 }
 
+func (u UserServer) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != "DELETE" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	id, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/user/delete/"))
+	if err != nil {
+		fmt.Printf("Not valid ID error: %v\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	ok := u.Repository.DeleteUser(id)
+	if !ok {
+		fmt.Println("User not found, delete statement not completed")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	fmt.Println("User deleted successfuly")
+	w.WriteHeader(http.StatusNoContent)
+}
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
