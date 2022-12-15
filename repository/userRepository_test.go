@@ -3,6 +3,8 @@ package repository_test
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -11,6 +13,7 @@ import (
 	"cl.isset.userfy/repository"
 )
 
+//implements repository.SQLDB interface
 type fakeSQLDB struct {
 	TimesCalled int
 	Parameter   string
@@ -26,40 +29,62 @@ func (fakeDB *fakeSQLDB) Query(parameter string, v ...any) (*sql.Rows, error) {
 	return nil, errors.New("Wrong query")
 }
 
-var fakeDB = fakeSQLDB{}
-var userRepository = repository.UserRepository{&fakeDB}
+func (fakeDB *fakeSQLDB) Exec(query string, args ...any) (sql.Result, error) {
+	for _, arg := range args {
+		argValue := fmt.Sprintf("%v", arg)
+		query = strings.Replace(query, "?", argValue, 1)
+	}
+	fakeDB.Parameter = query
+
+	fakeDB.TimesCalled++
+	return fakeResult{}, nil
+}
+
+//implements sql.Result interface
+type fakeResult struct{}
+
+func (f fakeResult) LastInsertId() (int64, error) {
+	return int64(10), nil
+}
+func (f fakeResult) RowsAffected() (int64, error) {
+	return int64(1), nil
+}
+
+var fakeDB fakeSQLDB
+var userRepository repository.UserRepository
 
 var _ = Describe("UserRepository", func() {
 	Describe("When inserting a valid user", func() {
 		var validUser model.User
-		var expectedUser model.User
 
 		BeforeEach(func() {
 			validUser = model.User{Name: "Josset", Email: "isset.josset@gmail.com", Age: 26}
-			expectedUser = model.User{ID: 1, Name: "Josset", Email: "isset.josset@gmail.com", Age: 26}
+			fakeDB = fakeSQLDB{}
+			userRepository = repository.UserRepository{&fakeDB}
 		})
 
-		It("Should return the user with a new unique id", func() {
-			createdUser := userRepository.InsertUser(validUser)
+		It("Should call db.Exec method once", func() {
+			userRepository.InsertUser(validUser)
+			timesCalled := fakeDB.TimesCalled
 
-			Expect(createdUser.ID).To(Equal(expectedUser.ID))
-
-			createdUser = userRepository.InsertUser(validUser)
-			expectedUser = model.User{ID: 2, Name: "Josset", Email: "isset.josset@gmail.com", Age: 26}
-
-			Expect(createdUser.ID).To(Equal(expectedUser.ID))
+			Expect(timesCalled).To(Equal(1))
 		})
 
-		It("Should return the user with the same fields", func() {
-			createdUser := userRepository.InsertUser(validUser)
+		It("Should call db.Exec with correct insert query", func() {
+			expectedQuery := fmt.Sprintf("INSERT INTO users (name, email, age) VALUES (%s, %s, %d)", validUser.Name, validUser.Email, validUser.Age)
+			userRepository.InsertUser(validUser)
 
-			Expect(createdUser.Name).To(Equal(expectedUser.Name))
-			Expect(createdUser.Email).To(Equal(expectedUser.Email))
-			Expect(createdUser.Age).To(Equal(expectedUser.Age))
+			queryCalledWith := fakeDB.Parameter
+			Expect(queryCalledWith).To(Equal(expectedQuery))
 		})
 	})
 
 	Describe("When fetching all users", func() {
+		BeforeEach(func() {
+			fakeDB = fakeSQLDB{}
+			userRepository = repository.UserRepository{&fakeDB}
+		})
+
 		It("Should call db.Query method once", func() {
 			userRepository.GetUsers()
 			timesCalled := fakeDB.TimesCalled
@@ -67,48 +92,37 @@ var _ = Describe("UserRepository", func() {
 		})
 
 		It("Should call db.Query method with 'SELECT * FROM users' query", func() {
+			selectQuery := "SELECT * FROM users"
 			userRepository.GetUsers()
 			queryCalledWith := fakeDB.CalledWith()
 
-			Expect(queryCalledWith).To(Equal("SELECT * FROM users"))
+			Expect(queryCalledWith).To(Equal(selectQuery))
 		})
 	})
 
 	Describe("When updating an existing user", func() {
 		Context("When payload is valid", func() {
 			var validUser model.User
-			var expectedUser model.User
+
 			BeforeEach(func() {
 				validUser = model.User{ID: 1, Name: "Josset", Email: "isset.josset@gmail.com", Age: 26}
-				expectedUser = model.User{ID: 1, Name: "Joseto", Email: "josset.isset@hotmail.com", Age: 30}
+				fakeDB = fakeSQLDB{}
+				userRepository = repository.UserRepository{&fakeDB}
 			})
 
-			It("Should return the updated entity", func() {
-				userRepository.InsertUser(validUser)
-				validUser.Name = "Joseto"
-				validUser.Email = "josset.isset@hotmail.com"
-				validUser.Age = 30
+			It("Should call db.Exec method once", func() {
+				userRepository.UpdateUser(validUser)
+				timesCalled := fakeDB.TimesCalled
 
-				updatedUser, _ := userRepository.UpdateUser(validUser)
-
-				Expect(updatedUser.ID).To(Equal(expectedUser.ID))
-				Expect(updatedUser.Name).To(Equal(expectedUser.Name))
-				Expect(updatedUser.Email).To(Equal(expectedUser.Email))
-				Expect(updatedUser.Age).To(Equal(expectedUser.Age))
-			})
-		})
-
-		Context("When payload is not a valid entity", func() {
-			var nonExistentUser model.User
-			BeforeEach(func() {
-				nonExistentUser = model.User{ID: 5, Name: "Josset", Email: "isset.josset@gmail.com", Age: 26}
+				Expect(timesCalled).To(Equal(1))
 			})
 
-			It("Should return an error", func() {
-				user, err := userRepository.UpdateUser(nonExistentUser)
+			It("Should call db.Exec method with correct update query", func() {
+				expectedQuery := "UPDATE users SET name = Josset, email = isset.josset@gmail.com, age = 26  WHERE ID = 1"
+				userRepository.UpdateUser(validUser)
 
-				Expect(err).ShouldNot(BeNil())
-				Expect(user).Should(BeNil())
+				queryCalledWith := fakeDB.Parameter
+				Expect(queryCalledWith).To(Equal(expectedQuery))
 			})
 		})
 	})

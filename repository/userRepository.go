@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 
 	"cl.isset.userfy/model"
@@ -19,6 +18,7 @@ type IUserRepository interface {
 
 type SQLDB interface {
 	Query(query string, args ...any) (*sql.Rows, error)
+	Exec(query string, args ...any) (sql.Result, error)
 }
 
 type UserRepository struct {
@@ -26,9 +26,14 @@ type UserRepository struct {
 }
 
 func (userRepo UserRepository) InsertUser(user model.User) model.User {
-	id := nextID()
-	user.ID = id
-	users = append(users, user)
+
+	result, err := userRepo.DB.Exec("INSERT INTO users (name, email, age) VALUES (?, ?, ?)", user.Name, user.Email, user.Age)
+	if err != nil {
+		fmt.Printf("error inserting an user: %v\n", err)
+		return model.User{}
+	}
+	lastInsertedId, _ := result.LastInsertId()
+	user.ID = uint(lastInsertedId)
 	return user
 }
 
@@ -55,22 +60,9 @@ func (userRepo UserRepository) GetUsers() []model.User {
 }
 
 func (userRepo UserRepository) UpdateUser(user model.User) (*model.User, error) {
-	var userToBeUpdated *model.User
-	for _, u := range users {
-		if u.ID == user.ID {
-			userToBeUpdated = &u
-			break
-		}
-	}
+	userRepo.DB.Exec("UPDATE users SET name = ?, email = ?, age = ?  WHERE ID = ?", user.Name, user.Email, user.Age, user.ID)
 
-	if userToBeUpdated == nil {
-		return nil, errors.New("user provided does not exist")
-	}
-	userToBeUpdated.Name = user.Name
-	userToBeUpdated.Email = user.Email
-	userToBeUpdated.Age = user.Age
-
-	return userToBeUpdated, nil
+	return &user, nil
 }
 
 func (userRepo UserRepository) Clear() {
