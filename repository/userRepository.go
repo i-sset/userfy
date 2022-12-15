@@ -67,9 +67,10 @@ func (userRepo UserRepository) DeleteUser(id int) bool {
 
 	rowsAffected, err := result.RowsAffected()
 	if err == nil {
-		fmt.Printf("Delete statement Rows affected: %d", rowsAffected)
-		return true
+		if rowsAffected != 0 {
+			fmt.Printf("Delete statement Rows affected: %d\n", rowsAffected)
+			return true
+		}
 	}
-
 	return false
 }
