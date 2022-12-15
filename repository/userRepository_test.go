@@ -64,18 +64,18 @@ var _ = Describe("UserRepository", func() {
 		})
 
 		It("Should call db.Exec method once", func() {
+			expectedTimes := 1
 			userRepository.InsertUser(validUser)
-			timesCalled := fakeDB.TimesCalled
 
-			Expect(timesCalled).To(Equal(1))
+			assertTimesCalled(expectedTimes, fakeDB.TimesCalled)
+
 		})
 
 		It("Should call db.Exec with correct insert query", func() {
 			expectedQuery := fmt.Sprintf("INSERT INTO users (name, email, age) VALUES (%s, %s, %d)", validUser.Name, validUser.Email, validUser.Age)
 			userRepository.InsertUser(validUser)
 
-			queryCalledWith := fakeDB.Parameter
-			Expect(queryCalledWith).To(Equal(expectedQuery))
+			assertQuery(expectedQuery, fakeDB.CalledWith())
 		})
 	})
 
@@ -86,17 +86,18 @@ var _ = Describe("UserRepository", func() {
 		})
 
 		It("Should call db.Query method once", func() {
+			expectedTimes := 1
 			userRepository.GetUsers()
-			timesCalled := fakeDB.TimesCalled
-			Expect(timesCalled).To(Equal(1))
+
+			assertTimesCalled(expectedTimes, fakeDB.TimesCalled)
+
 		})
 
 		It("Should call db.Query method with 'SELECT * FROM users' query", func() {
-			selectQuery := "SELECT * FROM users"
+			expectedQuery := "SELECT * FROM users"
 			userRepository.GetUsers()
-			queryCalledWith := fakeDB.CalledWith()
 
-			Expect(queryCalledWith).To(Equal(selectQuery))
+			assertQuery(expectedQuery, fakeDB.CalledWith())
 		})
 	})
 
@@ -112,18 +113,25 @@ var _ = Describe("UserRepository", func() {
 
 			It("Should call db.Exec method once", func() {
 				userRepository.UpdateUser(validUser)
-				timesCalled := fakeDB.TimesCalled
+				expectedTimes := 1
 
-				Expect(timesCalled).To(Equal(1))
+				assertTimesCalled(expectedTimes, fakeDB.TimesCalled)
 			})
 
 			It("Should call db.Exec method with correct update query", func() {
 				expectedQuery := "UPDATE users SET name = Josset, email = isset.josset@gmail.com, age = 26  WHERE ID = 1"
 				userRepository.UpdateUser(validUser)
 
-				queryCalledWith := fakeDB.Parameter
-				Expect(queryCalledWith).To(Equal(expectedQuery))
+				assertQuery(expectedQuery, fakeDB.CalledWith())
 			})
 		})
 	})
 })
+
+func assertQuery(expected string, actual string) {
+	Expect(actual).To(Equal(expected))
+}
+
+func assertTimesCalled(expected int, actual int) {
+	Expect(actual).To(Equal(expected))
+}
