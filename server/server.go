@@ -18,8 +18,15 @@ type UserServer struct {
 }
 
 func (u UserServer) InsertUserHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if r.Method != http.MethodPost {
+	enableCors(w)
+	requestMethod := r.Method
+	//bypass preflight requests (cors related)
+	if requestMethod == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if requestMethod != http.MethodPost && requestMethod != http.MethodOptions {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -59,7 +66,13 @@ func (u UserServer) GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u UserServer) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	enableCors(w)
+
+	//bypass preflight requests (cors related)
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -81,11 +94,19 @@ func (u UserServer) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u UserServer) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	enableCors(w)
+	requestMethod := r.Method
+	//bypass preflight requests (cors related)
+	if requestMethod == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
-	if r.Method != "DELETE" {
+	if requestMethod != http.MethodDelete && requestMethod != http.MethodOptions {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+
 	id, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/user/delete/"))
 	if err != nil {
 		fmt.Printf("Not valid ID error: %v\n", err)
@@ -103,4 +124,11 @@ func (u UserServer) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
+}
+
+func enableCors(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Origin, Accept, token")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT,OPTIONS, DELETE")
+	w.Header().Set("Access-Control-Max-Age", "3600")
 }
