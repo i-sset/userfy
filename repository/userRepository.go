@@ -25,7 +25,7 @@ type UserRepository struct {
 
 func (userRepo UserRepository) InsertUser(user model.User) model.User {
 
-	result, err := userRepo.DB.Exec("INSERT INTO users (name, email, age) VALUES (?, ?, ?)", user.Name, user.Email, user.Age)
+	result, err := userRepo.DB.Exec("INSERT INTO users (firstname, lastname, email, age) VALUES (?, ?, ?, ?)", user.Firstname, user.Lastname, user.Email, user.Age)
 	if err != nil {
 		fmt.Printf("error inserting an user: %v\n", err)
 		return model.User{}
@@ -46,14 +46,14 @@ func (userRepo UserRepository) GetUsers() []model.User {
 
 	for usersRow.Next() {
 		user := model.User{}
-		usersRow.Scan(&user.ID, &user.Name, &user.Email, &user.Age)
+		usersRow.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email, &user.Age)
 		users = append(users, user)
 	}
 	return users
 }
 
 func (userRepo UserRepository) UpdateUser(user model.User) (*model.User, error) {
-	userRepo.DB.Exec("UPDATE users SET name = ?, email = ?, age = ?  WHERE ID = ?", user.Name, user.Email, user.Age, user.ID)
+	userRepo.DB.Exec("UPDATE users SET firstname = ?, lastname = ?, email = ?, age = ?  WHERE ID = ?", user.Firstname, user.Lastname, user.Email, user.Age, user.ID)
 
 	return &user, nil
 }
